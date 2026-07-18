@@ -51,6 +51,7 @@ export interface PlayerState {
 export interface TemporaryAllocations {
   selectedCourseId: string | null;
   courseEffort: EffortLevel | null;
+  half1Effort: EffortLevel | null;   // preserved for averaging in half 2
   activities: ActivityId[];
 }
 

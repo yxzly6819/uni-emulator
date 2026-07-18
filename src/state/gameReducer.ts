@@ -44,8 +44,9 @@ function calculateGrade(
   effort: EffortLevel,
   trueAbility: number,
   money: number,
+  effortValOverride?: number,
 ): { gradePoint: number; note: string } {
-  const effortVal = EFFORT_VALUE[effort];
+  const effortVal = effortValOverride ?? EFFORT_VALUE[effort];
   const eIdx = course.effortIndex;
 
   // Fixed grading (形势与政策)
@@ -332,7 +333,7 @@ function handleSelectMajor(state: GameState, major: 'EECS' | 'LAW'): GameState {
     ...state,
     player: { ...state.player, major, termPhase: 'semester_start' },
     currentHalf: 1,
-    temporaryAllocations: { selectedCourseId: null, courseEffort: null, activities: [] },
+    temporaryAllocations: { selectedCourseId: null, courseEffort: null, half1Effort: null, activities: [] },
   };
 }
 
@@ -385,8 +386,14 @@ function handleConfirmHalf(state: GameState): GameState {
     if (course) {
       newPlayer.currentCourse = course;
 
-      // Grade calculation
-      const gradeResult = calculateGrade(course, courseEffort, newPlayer.trueAbility, newPlayer.money);
+      // Grade calculation — half 2 uses average of both halves' effort
+      let gradeEffortVal: number | undefined;
+      if (currentHalf === 2 && state.temporaryAllocations.half1Effort) {
+        const h1Val = EFFORT_VALUE[state.temporaryAllocations.half1Effort];
+        const h2Val = EFFORT_VALUE[courseEffort];
+        gradeEffortVal = (h1Val + h2Val) / 2;
+      }
+      const gradeResult = calculateGrade(course, courseEffort, newPlayer.trueAbility, newPlayer.money, gradeEffortVal);
 
       // MindBody cost (stored as negative values in data)
       const mbCost = calculateMindBodyCost(course, courseEffort);
@@ -468,12 +475,16 @@ function handleConfirmHalf(state: GameState): GameState {
 
   // 6. Phase transition
   if (currentHalf === 1) {
-    // After half 1: if no event, go to mid_feedback directly; otherwise event popup handles it
+    // Save half 1 effort for averaging
     const nextPhase = event ? state.player.termPhase : 'mid_feedback';
     return {
       ...state,
       player: { ...newPlayer, termPhase: nextPhase },
       currentHalf: 2,
+      temporaryAllocations: {
+        ...state.temporaryAllocations,
+        half1Effort: courseEffort,
+      },
       lastFeedback: feedback,
       pendingEvent: event,
       pendingEventResolved: false,
@@ -501,6 +512,7 @@ function handleDismissFeedback(state: GameState): GameState {
       temporaryAllocations: {
         selectedCourseId: state.temporaryAllocations.selectedCourseId,
         courseEffort: state.temporaryAllocations.courseEffort,
+        half1Effort: state.temporaryAllocations.half1Effort,
         activities: [],
       },
     };
@@ -652,7 +664,7 @@ function handleAdvanceSemester(state: GameState): GameState {
     ...state,
     player: { ...newPlayer, termPhase: 'semester_start', currentCourse: null },
     currentHalf: 1,
-    temporaryAllocations: { selectedCourseId: null, courseEffort: null, activities: [] },
+    temporaryAllocations: { selectedCourseId: null, courseEffort: null, half1Effort: null, activities: [] },
     lastFeedback: null,
     pendingEvent: null,
     pendingEventResolved: false,

@@ -29,6 +29,7 @@ export function createInitialState(): GameState {
     temporaryAllocations: {
       selectedCourseId: null,
       courseEffort: null,
+      half1Effort: null,
       activities: [],
     },
     pendingEvent: null,
