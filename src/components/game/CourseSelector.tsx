@@ -53,9 +53,9 @@ export function CourseSelector({
       {/* Politics reminder */}
       {!readOnly && remainingPolitics > 0 && (
         <div className="official-notice mb-3 text-sm">
-          ⚠️ 毕业前必须修完 4 门政治课，当前还差 <span className="font-bold text-party-red">{remainingPolitics}</span> 门。
+          ⚠️ 毕业前必须修完 4 门政治课，当前还差 <span className="font-bold text-party-red">{remainingPolitics}</span> 门。每学期只能选 1 门课。
           {player.currentSemester >= 6 && remainingPolitics > (8 - player.currentSemester) && (
-            <span className="text-danger-red"> 剩余学期不足以修完所有政治课，请立即选政治课！</span>
+            <span className="text-danger-red"><br />剩余学期不足以修完所有政治课，请立即选政治课！</span>
           )}
         </div>
       )}
