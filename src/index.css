@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   Global styles for 大学模拟器
+   ============================================================ */
+
+@layer base {
+  body {
+    @apply bg-paper-white text-ink-black font-game antialiased;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4c5a9' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-bureau-gray/30 rounded-full;
+  }
+}
+
+@layer components {
+  .sarcasm-block {
+    @apply border-l-4 border-sarcasm-purple/50 pl-4 py-2 my-3 italic text-sarcasm-purple font-sarcasm leading-relaxed;
+  }
+
+  .grade-green {
+    @apply text-a-grade font-bold;
+  }
+  .grade-yellow {
+    @apply text-party-gold font-bold;
+  }
+  .grade-red {
+    @apply text-f-grade font-bold;
+  }
+
+  .official-notice {
+    @apply border-l-4 border-party-red pl-4 py-2 my-3 bg-red-50/50;
+  }
+
+  .paper-card {
+    @apply bg-white/80 backdrop-blur-sm border border-bureau-gray/20 rounded-lg shadow-md p-6;
+  }
+}
