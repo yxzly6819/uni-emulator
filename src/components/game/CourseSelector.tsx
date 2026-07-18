@@ -77,38 +77,54 @@ export function CourseSelector({
         </button>
       </div>
 
-      <div className="grid gap-3 max-h-96 overflow-y-auto">
+      <div className="grid gap-4">
         {availableCourses.map(course => {
           const isSelected = selectedCourseId === course.id;
+          const isPolitical = course.type === 'politics';
+          const attendanceText = course.attendance === 'none' ? '不点名' :
+            course.attendance === 'mandatory' ? '必点' :
+            course.attendance === 'strict' ? `严格点名 (${Math.round(course.attendanceRate * 100)}%)` :
+            `随机点名 (${Math.round(course.attendanceRate * 100)}%)`;
           return (
             <Card
               key={course.id}
               selected={isSelected}
               onClick={() => !readOnly && onSelectCourse(course.id)}
+              className="!p-5 cursor-pointer hover:shadow-md transition-shadow"
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold">{course.name}</span>
-                    <span className="text-xs text-bureau-gray">{courseTypeLabel(course.type)}</span>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-2xl">{isPolitical ? '🏛️' : '📚'}</span>
+                    <div>
+                      <div className="font-bold text-lg">{course.name}</div>
+                      <div className="flex items-center gap-3 text-xs text-bureau-gray mt-0.5">
+                        <span>{attendanceText}</span>
+                        <span>·</span>
+                        <span>绩点上限 {course.gradeCap ?? 4.0}</span>
+                        <span>·</span>
+                        <span>{isPolitical ? '政治课' : '专业课'}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs text-bureau-gray mt-1">{course.description}</div>
-                  <div className="text-xs text-bureau-gray mt-0.5">
-                    点名: {course.attendance === 'none' ? '不点名' : course.attendance === 'mandatory' ? '必点 (100%)' : course.attendance === 'strict' ? `严格 (${course.attendanceRate * 100}%)` : `随机 (${course.attendanceRate * 100}%)`}
-                    {' · '}给分: {course.grading}
-                  </div>
+                  <div className="text-xs text-bureau-gray/70 italic">{course.sarcasm}</div>
                 </div>
+                {isSelected && (
+                  <div className="ml-4 w-8 h-8 rounded-full bg-ink-black text-white flex items-center justify-center text-sm font-bold shrink-0">
+                    ✓
+                  </div>
+                )}
               </div>
 
               {isSelected && !readOnly && (
-                <div className="mt-3 pt-3 border-t border-gray-100">
-                  <div className="text-xs text-bureau-gray mb-2">选择投入档位：</div>
+                <div className="mt-5 pt-4 border-t border-gray-200">
+                  <div className="text-xs text-bureau-gray mb-3 tracking-wider uppercase">选择投入档位</div>
                   <EffortSelector selected={selectedEffort} onChange={onSelectEffort} />
                 </div>
               )}
 
               {isSelected && readOnly && selectedEffort && (
-                <div className="mt-2 text-sm text-bureau-gray">
+                <div className="mt-3 text-sm text-bureau-gray">
                   当前投入: <span className="font-bold text-ink-black">{selectedEffort}</span>
                 </div>
               )}

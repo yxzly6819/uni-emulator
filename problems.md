@@ -21,6 +21,10 @@
 1. 事件50%空缺 ✅ 已修复 — `selectEvent` 开头增加 `if (Math.random() < 0.5) return null`
 2. GitHub Pages 部署 ✅ 已完成配置
 
+## v0.4 
+1. 和我明确结局刷新方法和各个结局的结语
+2. 美化ui，每半个学期先选课再选活动，在屏幕上铺开
+
 ### GitHub Pages 部署步骤
 
 1. 创建 GitHub 仓库并 push 代码：

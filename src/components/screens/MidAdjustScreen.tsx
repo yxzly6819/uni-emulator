@@ -10,6 +10,10 @@ const EFFORT_COST: Record<EffortLevel, number> = {
   skip: 0, idle: 1, normal: 3, serious: 5, dead: 7,
 };
 
+const EFFORT_LABEL: Record<EffortLevel, string> = {
+  skip: '逃课', idle: '摸鱼', normal: '正常', serious: '认真', dead: '死磕',
+};
+
 const ACTIVITY_COST: Record<ActivityId, number> = {
   parttime: 3, competition: 5, rest: 0, selfstudy: 4,
 };
@@ -33,40 +37,65 @@ export function MidAdjustScreen() {
   };
 
   return (
-    <div className="min-h-screen pt-16 pb-8 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold">期中调整</h2>
-          <p className="text-bureau-gray text-sm">
-            大{player.currentYear} · 第{player.currentSemester}学期 · 下半学期
-          </p>
-          <p className="text-xs text-bureau-gray mt-2">
-            💡 课程已锁定，但你可以调整投入档位和额外活动。
-          </p>
+    <div className="min-h-screen pt-16 pb-12 px-6">
+      <div className="max-w-3xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <div className="text-xs text-bureau-gray tracking-widest uppercase mb-1">
+            大{player.currentYear} · 第{player.currentSemester}学期
+          </div>
+          <h2 className="text-3xl font-extrabold tracking-wide">下半学期调整</h2>
+          <div className="mt-3 flex justify-center gap-6 text-sm text-bureau-gray">
+            <span>💰 ¥{player.money.toLocaleString()}</span>
+            <span>📊 {player.major}</span>
+          </div>
+          <p className="text-xs text-bureau-gray mt-3">课程已锁定，可以调整投入档位和额外活动</p>
         </div>
 
-        {/* Fixed course display */}
+        {/* Fixed course card */}
         {player.currentCourse ? (
-          <Card className="mb-6">
-            <h4 className="font-bold text-sm text-bureau-gray mb-2">本学期课程</h4>
-            <div className="p-3 bg-gray-50 rounded-lg mb-3">
-              <span className="font-bold">{player.currentCourse.name}</span>
-              <span className="text-xs text-bureau-gray ml-2">{player.currentCourse.type === 'politics' ? '政治课' : '专业课'}</span>
+          <Card className="!p-6 mb-8 flex items-center justify-between">
+            <div>
+              <span className="text-xs text-bureau-gray tracking-wider uppercase">本学期课程</span>
+              <div className="font-bold text-xl">{player.currentCourse.name}</div>
+              <div className="text-xs text-bureau-gray mt-1">
+                {player.currentCourse.type === 'politics' ? '政治课' : '专业课'}
+                {' · '}
+                {player.currentCourse.sarcasm.slice(0, 50)}...
+              </div>
             </div>
-            <div className="text-xs text-bureau-gray mb-2">调整投入档位：</div>
+            <div className="text-right">
+              <span className="text-xs text-bureau-gray">上半学期投入</span>
+              <div className="font-bold text-lg">
+                {temporaryAllocations.half1Effort ? EFFORT_LABEL[temporaryAllocations.half1Effort] : '—'}
+              </div>
+              <span className="text-xs text-bureau-gray">最终绩点取两半学期平均</span>
+            </div>
+          </Card>
+        ) : (
+          <Card className="!p-6 mb-8 text-center">
+            <div className="text-bureau-gray py-4">本学期未选课（可能触发休学结局）</div>
+          </Card>
+        )}
+
+        {/* Effort adjustment */}
+        {player.currentCourse && (
+          <Card className="!p-8 mb-8">
+            <h4 className="text-xs text-bureau-gray tracking-wider uppercase mb-4">调整下半学期投入档位</h4>
             <EffortSelector
               selected={temporaryAllocations.courseEffort}
               onChange={handleSelectEffort}
             />
-          </Card>
-        ) : (
-          <Card className="mb-6">
-            <div className="text-bureau-gray text-sm text-center py-4">本学期未选课（可能触发休学结局）</div>
+            {temporaryAllocations.courseEffort && temporaryAllocations.half1Effort && (
+              <div className="mt-3 text-xs text-bureau-gray text-center">
+                平均投入值 = ({EFFORT_COST[temporaryAllocations.half1Effort]} + {EFFORT_COST[temporaryAllocations.courseEffort]}) / 2 = {((EFFORT_COST[temporaryAllocations.half1Effort] + EFFORT_COST[temporaryAllocations.courseEffort]) / 2).toFixed(1)}
+              </div>
+            )}
           </Card>
         )}
 
-        {/* Energy re-allocation */}
-        <Card className="mb-6">
+        {/* Energy allocation */}
+        <Card className="!p-8 mb-8">
           <EnergyAllocator
             selectedActivities={temporaryAllocations.activities}
             onToggle={handleToggleActivity}
@@ -76,6 +105,7 @@ export function MidAdjustScreen() {
           />
         </Card>
 
+        {/* Confirm */}
         <div className="text-center">
           <Button
             onClick={() => dispatch({ type: 'CONFIRM_HALF' })}
@@ -85,9 +115,7 @@ export function MidAdjustScreen() {
             开始下半学期
           </Button>
           {!canConfirm && (
-            <p className="text-xs text-bureau-gray mt-2">
-              精力超出 {totalEnergy - 10} 点，请调整分配
-            </p>
+            <p className="text-xs text-danger-red mt-2">精力超出 {totalEnergy - 10} 点，请调整分配</p>
           )}
         </div>
       </div>

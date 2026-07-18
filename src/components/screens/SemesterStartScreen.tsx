@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useGame } from '../../state/GameContext';
 import { CourseSelector } from '../game/CourseSelector';
+import { EffortSelector } from '../game/EffortSelector';
 import { EnergyAllocator } from '../game/EnergyAllocator';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
@@ -17,12 +19,14 @@ const ACTIVITY_COST: Record<ActivityId, number> = {
 export function SemesterStartScreen() {
   const { state, dispatch } = useGame();
   const { player, currentHalf, temporaryAllocations } = state;
+  const [step, setStep] = useState<'course' | 'energy'>('course');
 
   const totalEnergy =
     (temporaryAllocations.courseEffort ? EFFORT_COST[temporaryAllocations.courseEffort] : 0) +
     temporaryAllocations.activities.reduce((s, a) => s + ACTIVITY_COST[a], 0);
 
   const canConfirm = totalEnergy <= 10 && (temporaryAllocations.selectedCourseId === null || temporaryAllocations.courseEffort !== null);
+  const canProceed = temporaryAllocations.selectedCourseId === null || temporaryAllocations.courseEffort !== null;
 
   const handleSelectCourse = (courseId: string | null) => {
     dispatch({ type: 'SELECT_COURSE', payload: courseId });
@@ -37,80 +41,137 @@ export function SemesterStartScreen() {
   };
 
   return (
-    <div className="min-h-screen pt-16 pb-8 px-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen pt-16 pb-12 px-6">
+      <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold">
-            第{player.currentSemester}学期 · {currentHalf === 1 ? '上半学期' : '下半学期'}
+        <div className="text-center mb-10">
+          <div className="text-xs text-bureau-gray tracking-widest uppercase mb-1">
+            大{player.currentYear} · 第{player.currentSemester}学期
+          </div>
+          <h2 className="text-3xl font-extrabold tracking-wide">
+            {currentHalf === 1 ? '上半学期' : '下半学期'}
           </h2>
-          <p className="text-bureau-gray text-sm mt-1">
-            大{player.currentYear} · {player.major} · 资金 ¥{player.money}
-          </p>
-          {currentHalf === 1 && (
-            <p className="text-xs text-bureau-gray mt-2">
-              💡 提示：每学期最多选1门课。剩余精力可分配给额外活动。
-            </p>
-          )}
+          <div className="mt-3 flex justify-center gap-6 text-sm text-bureau-gray">
+            <span>💰 ¥{player.money.toLocaleString()}</span>
+            <span>📊 {player.major}</span>
+          </div>
+
+          {/* Step indicator */}
+          <div className="flex justify-center gap-1 mt-8">
+            <button
+              onClick={() => setStep('course')}
+              className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${
+                step === 'course'
+                  ? 'bg-ink-black text-white'
+                  : 'bg-gray-100 text-bureau-gray hover:bg-gray-200'
+              }`}
+            >
+              ① 选课
+            </button>
+            <div className="w-8 flex items-center justify-center text-bureau-gray/30">—</div>
+            <button
+              onClick={() => { if (canProceed) setStep('energy'); }}
+              className={`px-6 py-2 rounded-full text-sm font-bold transition-all ${
+                step === 'energy'
+                  ? 'bg-ink-black text-white'
+                  : canProceed
+                    ? 'bg-gray-100 text-bureau-gray hover:bg-gray-200 cursor-pointer'
+                    : 'bg-gray-100 text-bureau-gray/30 cursor-not-allowed'
+              }`}
+            >
+              ② 精力分配
+            </button>
+          </div>
         </div>
 
-        {/* Course selection (only for half 1) */}
-        {currentHalf === 1 ? (
-          <Card className="mb-6">
-            <CourseSelector
-              selectedCourseId={temporaryAllocations.selectedCourseId}
-              selectedEffort={temporaryAllocations.courseEffort}
-              onSelectCourse={handleSelectCourse}
-              onSelectEffort={handleSelectEffort}
-            />
-          </Card>
-        ) : (
-          /* Half 2: course is fixed, show it */
-          <Card className="mb-6">
-            <h4 className="font-bold text-sm text-bureau-gray mb-3">本学期已选课程</h4>
-            {temporaryAllocations.selectedCourseId ? (
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <span className="font-bold">{player.currentCourse?.name ?? temporaryAllocations.selectedCourseId}</span>
-                <span className="text-bureau-gray text-sm ml-2">
-                  当前投入: {temporaryAllocations.courseEffort ?? '未选择'}
-                </span>
-              </div>
-            ) : (
-              <div className="text-bureau-gray text-sm">本学期未选课</div>
-            )}
-          </Card>
+        {/* Step 1: Course selection */}
+        {step === 'course' && (
+          <div className="space-y-6">
+            <Card className="!p-8">
+              <CourseSelector
+                selectedCourseId={temporaryAllocations.selectedCourseId}
+                selectedEffort={temporaryAllocations.courseEffort}
+                onSelectCourse={handleSelectCourse}
+                onSelectEffort={handleSelectEffort}
+              />
+            </Card>
+            <div className="text-center">
+              <Button
+                onClick={() => setStep('energy')}
+                disabled={!canProceed}
+                variant="primary"
+              >
+                {temporaryAllocations.courseEffort ? '下一步：精力分配' : '不选课，直接分配精力'}
+              </Button>
+              {temporaryAllocations.selectedCourseId && !temporaryAllocations.courseEffort && (
+                <p className="text-xs text-danger-red mt-2">请先选择课程投入档位</p>
+              )}
+            </div>
+          </div>
         )}
 
-        {/* Energy allocation */}
-        <Card className="mb-6">
-          <EnergyAllocator
-            selectedActivities={temporaryAllocations.activities}
-            onToggle={handleToggleActivity}
-            courseEffort={temporaryAllocations.courseEffort}
-            injured={player.flags.injured}
-            half={currentHalf}
-          />
-        </Card>
+        {/* Step 2: Energy allocation */}
+        {step === 'energy' && (
+          <div className="space-y-6">
+            {/* Show selected course summary */}
+            {temporaryAllocations.selectedCourseId && temporaryAllocations.courseEffort && (
+              <Card className="!p-5 flex items-center justify-between">
+                <div>
+                  <span className="text-sm text-bureau-gray">已选课程</span>
+                  <div className="font-bold text-lg">{player.currentCourse?.name ?? temporaryAllocations.selectedCourseId}</div>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm text-bureau-gray">投入档位</span>
+                  <div className="font-bold text-lg">
+                    {temporaryAllocations.courseEffort === 'skip' ? '逃课' :
+                     temporaryAllocations.courseEffort === 'idle' ? '摸鱼' :
+                     temporaryAllocations.courseEffort === 'normal' ? '正常' :
+                     temporaryAllocations.courseEffort === 'serious' ? '认真' : '死磕'}
+                    <span className="text-sm text-bureau-gray ml-1">({EFFORT_COST[temporaryAllocations.courseEffort]}精力)</span>
+                  </div>
+                </div>
+              </Card>
+            )}
 
-        {/* Confirm button */}
-        <div className="text-center">
-          <Button
-            onClick={() => dispatch({ type: 'CONFIRM_HALF' })}
-            disabled={!canConfirm}
-            variant="primary"
-          >
-            {currentHalf === 1 ? '开始上半学期' : '开始下半学期'}
-          </Button>
-          {!canConfirm && (
-            <p className="text-xs text-bureau-gray mt-2">
-              {temporaryAllocations.selectedCourseId && !temporaryAllocations.courseEffort
-                ? '请选择课程投入档位'
-                : totalEnergy > 10
-                  ? `精力超出 ${totalEnergy - 10} 点，请调整分配`
-                  : ''}
-            </p>
-          )}
-        </div>
+            {/* Effort selector (show again for easy adjustment) */}
+            {temporaryAllocations.selectedCourseId && (
+              <Card className="!p-6">
+                <h4 className="text-xs text-bureau-gray tracking-wider uppercase mb-4">调整投入档位</h4>
+                <EffortSelector selected={temporaryAllocations.courseEffort} onChange={handleSelectEffort} />
+              </Card>
+            )}
+
+            {/* Energy allocator */}
+            <Card className="!p-8">
+              <EnergyAllocator
+                selectedActivities={temporaryAllocations.activities}
+                onToggle={handleToggleActivity}
+                courseEffort={temporaryAllocations.courseEffort}
+                injured={player.flags.injured}
+                half={currentHalf}
+              />
+            </Card>
+
+            {/* Confirm */}
+            <div className="text-center">
+              <Button
+                onClick={() => dispatch({ type: 'CONFIRM_HALF' })}
+                disabled={!canConfirm}
+                variant="primary"
+              >
+                {currentHalf === 1 ? '开始上半学期' : '开始下半学期'}
+              </Button>
+              {!canConfirm && totalEnergy > 10 && (
+                <p className="text-xs text-danger-red mt-2">精力超出 {totalEnergy - 10} 点，请调整分配</p>
+              )}
+              <p className="mt-3">
+                <button onClick={() => setStep('course')} className="text-xs text-bureau-gray hover:text-ink-black underline">
+                  ← 返回选课
+                </button>
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

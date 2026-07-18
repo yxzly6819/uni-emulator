@@ -244,7 +244,7 @@ function determineEnding(player: PlayerState): import('../types/ending').EndingD
   }
 
   // F: Delayed graduation
-  if (!politicsComplete || avgGPA < 1.0) {
+  if (!politicsComplete || avgGPA < 2.0) {
     return {
       type: 'F', title: '延毕/失业',
       text: '你没有拿到毕业证。你在出租屋里刷招聘软件，发现所有的岗位都要求\'本科学历\'。你开始考虑那个不需要学历的工作。外卖箱已经在路上了。',
@@ -438,6 +438,10 @@ function handleConfirmHalf(state: GameState): GameState {
     totalAbilityChange += result.abilityChange;
     totalMindBodyChange += result.mindBodyChange;
     if (result.extraText) extraTexts.push(result.extraText);
+    // 大四自学 = 考研备考
+    if (actId === 'selfstudy' && newPlayer.currentYear >= 4) {
+      newPlayer.flags = { ...newPlayer.flags, selfstudyHard: true };
+    }
   }
 
   // 3. Apply changes
