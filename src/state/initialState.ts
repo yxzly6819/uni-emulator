@@ -1,5 +1,5 @@
 // ============================================================
-// Initial game state factory
+// Initial game state factory — v0.5 quarter system
 // ============================================================
 
 import type { GameState, PlayerState } from '../types/game';
@@ -25,11 +25,11 @@ export function createInitialPlayer(): PlayerState {
 export function createInitialState(): GameState {
   return {
     player: createInitialPlayer(),
-    currentHalf: 1,
+    currentQuarter: 1,
     temporaryAllocations: {
       selectedCourseId: null,
       courseEffort: null,
-      half1Effort: null,
+      quarterEfforts: [null, null, null, null],
       activities: [],
     },
     pendingEvent: null,

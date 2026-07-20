@@ -3,9 +3,9 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { ProgressBar } from '../ui/ProgressBar';
 
-export function MidFeedbackScreen() {
+export function QuarterFeedbackScreen() {
   const { state, dispatch } = useGame();
-  const { player, lastFeedback } = state;
+  const { player, currentQuarter, lastFeedback } = state;
 
   if (!lastFeedback) {
     return (
@@ -18,21 +18,32 @@ export function MidFeedbackScreen() {
   return (
     <div className="min-h-screen pt-16 pb-12 px-6">
       <div className="max-w-lg mx-auto">
+
         {/* Header */}
         <div className="text-center mb-10">
           <div className="text-xs text-bureau-gray tracking-widest uppercase mb-1">
             大{player.currentYear} · 第{player.currentSemester}学期
           </div>
-          <h2 className="text-3xl font-extrabold tracking-wide">期中反馈</h2>
-          <p className="text-bureau-gray text-sm mt-2">上半学期结算</p>
+          <h2 className="text-3xl font-extrabold tracking-wide">
+            第 {currentQuarter} 阶段结算
+          </h2>
+          <div className="mt-2 flex justify-center gap-2">
+            {[1, 2, 3, 4].map(q => (
+              <span key={q} className={`text-sm ${q <= currentQuarter ? 'font-bold' : 'text-bureau-gray/30'}`}>
+                {q <= currentQuarter ? '●' : '○'}
+              </span>
+            ))}
+          </div>
         </div>
 
-        {/* Grade prediction */}
+        {/* Grade */}
         {lastFeedback.gradeText && (
           <Card className="!p-8 mb-6 text-center">
-            <div className="text-xs text-bureau-gray tracking-wider uppercase mb-3">预期绩点</div>
+            <div className="text-xs text-bureau-gray tracking-wider uppercase mb-3">绩点预估</div>
             <div className="text-5xl font-extrabold text-ink-black">{lastFeedback.gradeText}</div>
-            <div className="text-xs text-bureau-gray mt-2">期末结算时确定最终绩点</div>
+            {currentQuarter < 4 && (
+              <div className="text-xs text-bureau-gray mt-3">最终绩点将在第 4 阶段结算后确定</div>
+            )}
           </Card>
         )}
 
@@ -72,9 +83,10 @@ export function MidFeedbackScreen() {
 
         <div className="text-center">
           <Button onClick={() => dispatch({ type: 'DISMISS_FEEDBACK' })} variant="primary">
-            进入期中调整
+            {currentQuarter >= 4 ? '查看期末总结' : `进入第 ${currentQuarter + 1} 阶段`}
           </Button>
         </div>
+
       </div>
     </div>
   );

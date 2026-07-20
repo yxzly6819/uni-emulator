@@ -1,5 +1,5 @@
 // ============================================================
-// Course registry — getCourseById, getAvailableCourses
+// Course registry with major→course mapping
 // ============================================================
 
 import type { CourseDef } from '../../types/course';
@@ -22,17 +22,13 @@ export function getCourseById(id: string): CourseDef | undefined {
   return courseMap.get(id);
 }
 
-/** Get courses available to a player given their major and completed course IDs */
 export function getAvailableCourses(
-  major: 'EECS' | 'LAW' | null,
+  major: string | null,
   completedIds: string[],
 ): CourseDef[] {
   if (!major) return [];
-
   return allCourses.filter(c => {
-    // Must not be completed
     if (completedIds.includes(c.id)) return false;
-    // Must match major or be ALL
     if (c.major !== 'ALL' && c.major !== major) return false;
     return true;
   });

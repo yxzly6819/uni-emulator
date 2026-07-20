@@ -22,7 +22,7 @@ export interface GameEvent {
   priority: number;
   category: 'daily' | 'satire' | 'core';
   title: string;
-  trigger: (state: PlayerState, half: 1 | 2) => boolean;
+  trigger: (state: PlayerState) => boolean;
   text: string;
   options?: EventOption[];
   noOptionEffect?: (state: PlayerState) => EventEffectResult;

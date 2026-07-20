@@ -25,11 +25,11 @@ export function StatsBar() {
           <span className="font-bold text-base">{majorName}</span>
           <span className="text-bureau-gray">|</span>
           <span>大{player.currentYear} · 第{player.currentSemester}学期</span>
-          {state.currentHalf === 1 && player.termPhase === 'semester_start' && (
-            <span className="text-xs bg-ink-black text-white px-1.5 py-0.5 rounded">上半学期</span>
+          {player.termPhase === 'quarter_operation' && (
+            <span className="text-xs bg-ink-black text-white px-1.5 py-0.5 rounded">Q{state.currentQuarter}/4</span>
           )}
-          {(player.termPhase === 'mid_adjust') && (
-            <span className="text-xs bg-party-gold text-white px-1.5 py-0.5 rounded">下半学期</span>
+          {player.termPhase === 'quarter_feedback' && (
+            <span className="text-xs bg-party-gold text-white px-1.5 py-0.5 rounded">Q{state.currentQuarter}/4</span>
           )}
         </div>
         <div className="flex items-center gap-4">

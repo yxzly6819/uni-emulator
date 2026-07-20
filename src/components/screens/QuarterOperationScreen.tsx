@@ -10,17 +10,17 @@ const EFFORT_COST: Record<EffortLevel, number> = {
   skip: 0, idle: 1, normal: 3, serious: 5, dead: 7,
 };
 
-const EFFORT_LABEL: Record<EffortLevel, string> = {
-  skip: '逃课', idle: '摸鱼', normal: '正常', serious: '认真', dead: '死磕',
-};
-
 const ACTIVITY_COST: Record<ActivityId, number> = {
   parttime: 3, competition: 5, rest: 0, selfstudy: 4,
 };
 
-export function MidAdjustScreen() {
+const EFFORT_LABEL: Record<EffortLevel, string> = {
+  skip: '逃课', idle: '摸鱼', normal: '正常', serious: '认真', dead: '死磕',
+};
+
+export function QuarterOperationScreen() {
   const { state, dispatch } = useGame();
-  const { player, temporaryAllocations } = state;
+  const { player, currentQuarter, temporaryAllocations } = state;
 
   const totalEnergy =
     (temporaryAllocations.courseEffort ? EFFORT_COST[temporaryAllocations.courseEffort] : 0) +
@@ -28,69 +28,74 @@ export function MidAdjustScreen() {
 
   const canConfirm = totalEnergy <= 10;
 
-  const handleSelectEffort = (effort: EffortLevel) => {
-    dispatch({ type: 'SET_COURSE_EFFORT', payload: effort });
-  };
-
-  const handleToggleActivity = (activityId: ActivityId) => {
-    dispatch({ type: 'TOGGLE_ACTIVITY', payload: activityId });
-  };
-
   return (
     <div className="min-h-screen pt-16 pb-12 px-6">
       <div className="max-w-3xl mx-auto">
+
         {/* Header */}
         <div className="text-center mb-10">
           <div className="text-xs text-bureau-gray tracking-widest uppercase mb-1">
             大{player.currentYear} · 第{player.currentSemester}学期
           </div>
-          <h2 className="text-3xl font-extrabold tracking-wide">下半学期调整</h2>
+          <h2 className="text-3xl font-extrabold tracking-wide">
+            第 {currentQuarter} 阶段
+          </h2>
           <div className="mt-3 flex justify-center gap-6 text-sm text-bureau-gray">
             <span>💰 ¥{player.money.toLocaleString()}</span>
             <span>📊 {player.major}</span>
+            <span>
+              {currentQuarter === 1 ? '◉' : '○'} {currentQuarter === 2 ? '◉' : '○'} {currentQuarter === 3 ? '◉' : '○'} {currentQuarter === 4 ? '◉' : '○'}
+            </span>
           </div>
-          <p className="text-xs text-bureau-gray mt-3">课程已锁定，可以调整投入档位和额外活动</p>
+          <p className="text-xs text-bureau-gray mt-2">
+            剩余 {10} 精力点 · 可调整课程投入和额外活动
+          </p>
         </div>
 
-        {/* Fixed course card */}
+        {/* Course card (fixed) */}
         {player.currentCourse ? (
           <Card className="!p-6 mb-8 flex items-center justify-between">
             <div>
               <span className="text-xs text-bureau-gray tracking-wider uppercase">本学期课程</span>
               <div className="font-bold text-xl">{player.currentCourse.name}</div>
-              <div className="text-xs text-bureau-gray mt-1">
-                {player.currentCourse.type === 'politics' ? '政治课' : '专业课'}
-                {' · '}
-                {player.currentCourse.sarcasm.slice(0, 50)}...
+              <div className="text-xs text-bureau-gray mt-1 italic">
+                {player.currentCourse.sarcasm.slice(0, 60)}...
               </div>
             </div>
             <div className="text-right">
-              <span className="text-xs text-bureau-gray">上半学期投入</span>
-              <div className="font-bold text-lg">
-                {temporaryAllocations.half1Effort ? EFFORT_LABEL[temporaryAllocations.half1Effort] : '—'}
+              <span className="text-xs text-bureau-gray">绩点取 4 个阶段平均</span>
+              <div className="font-bold text-sm mt-1">
+                {temporaryAllocations.quarterEfforts.filter(e => e !== null).length} / 4 已完成
               </div>
-              <span className="text-xs text-bureau-gray">最终绩点取两半学期平均</span>
             </div>
           </Card>
         ) : (
           <Card className="!p-6 mb-8 text-center">
-            <div className="text-bureau-gray py-4">本学期未选课（可能触发休学结局）</div>
+            <div className="text-bureau-gray py-4">本学期未选课</div>
           </Card>
         )}
 
-        {/* Effort adjustment */}
+        {/* Effort selector */}
         {player.currentCourse && (
           <Card className="!p-8 mb-8">
-            <h4 className="text-xs text-bureau-gray tracking-wider uppercase mb-4">调整下半学期投入档位</h4>
+            <h4 className="text-xs text-bureau-gray tracking-wider uppercase mb-4">
+              第 {currentQuarter} 阶段投入档位
+            </h4>
             <EffortSelector
               selected={temporaryAllocations.courseEffort}
-              onChange={handleSelectEffort}
+              onChange={(e) => dispatch({ type: 'SET_COURSE_EFFORT', payload: e })}
             />
-            {temporaryAllocations.courseEffort && temporaryAllocations.half1Effort && (
-              <div className="mt-3 text-xs text-bureau-gray text-center">
-                平均投入值 = ({EFFORT_COST[temporaryAllocations.half1Effort]} + {EFFORT_COST[temporaryAllocations.courseEffort]}) / 2 = {((EFFORT_COST[temporaryAllocations.half1Effort] + EFFORT_COST[temporaryAllocations.courseEffort]) / 2).toFixed(1)}
-              </div>
-            )}
+            {/* Show previous efforts */}
+            <div className="mt-4 flex gap-2 justify-center text-xs text-bureau-gray">
+              {[1, 2, 3, 4].map(q => {
+                const e = temporaryAllocations.quarterEfforts[q - 1];
+                return (
+                  <span key={q} className={`px-2 py-1 rounded ${q === currentQuarter ? 'bg-ink-black text-white font-bold' : e ? 'bg-gray-100' : 'bg-gray-50 text-bureau-gray/40'}`}>
+                    Q{q}: {e ? EFFORT_LABEL[e] : '—'}
+                  </span>
+                );
+              })}
+            </div>
           </Card>
         )}
 
@@ -98,26 +103,27 @@ export function MidAdjustScreen() {
         <Card className="!p-8 mb-8">
           <EnergyAllocator
             selectedActivities={temporaryAllocations.activities}
-            onToggle={handleToggleActivity}
+            onToggle={(a) => dispatch({ type: 'TOGGLE_ACTIVITY', payload: a })}
             courseEffort={temporaryAllocations.courseEffort}
             injured={player.flags.injured}
-            half={2}
+            half={currentQuarter === 1 || currentQuarter === 2 ? 1 : 2}
           />
         </Card>
 
         {/* Confirm */}
         <div className="text-center">
           <Button
-            onClick={() => dispatch({ type: 'CONFIRM_HALF' })}
+            onClick={() => dispatch({ type: 'CONFIRM_QUARTER' })}
             disabled={!canConfirm}
             variant="primary"
           >
-            开始下半学期
+            结算第 {currentQuarter} 阶段
           </Button>
           {!canConfirm && (
-            <p className="text-xs text-danger-red mt-2">精力超出 {totalEnergy - 10} 点，请调整分配</p>
+            <p className="text-xs text-danger-red mt-2">精力超出 {totalEnergy - 10} 点</p>
           )}
         </div>
+
       </div>
     </div>
   );

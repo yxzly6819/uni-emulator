@@ -1,9 +1,9 @@
 // ============================================================
-// Core game types — PlayerState, GameState, Flags, GPARecord
+// Core game types — v0.5 quarter system (4 decisions per semester)
 // ============================================================
 
 import type { CourseDef, EffortLevel } from './course';
-import type { GameEvent, EventEffectResult } from './event';
+import type { GameEvent } from './event';
 import type { ActivityId } from './activity';
 import type { EndingDetail } from './ending';
 
@@ -27,14 +27,14 @@ export interface GPARecord {
 export type TermPhase =
   | 'title'
   | 'major_select'
-  | 'semester_start'
-  | 'mid_feedback'
-  | 'mid_adjust'
-  | 'semester_end'
+  | 'semester_start'        // select course at semester start
+  | 'quarter_operation'     // allocate energy for current quarter (1-4)
+  | 'quarter_feedback'      // show quarter results
+  | 'semester_end'          // final grades + summary
   | 'ending';
 
 export interface PlayerState {
-  major: 'EECS' | 'LAW' | null;
+  major: string | null;          // now supports any major id
   money: number;
   gpaRecords: GPARecord[];
   trueAbility: number;
@@ -51,7 +51,7 @@ export interface PlayerState {
 export interface TemporaryAllocations {
   selectedCourseId: string | null;
   courseEffort: EffortLevel | null;
-  half1Effort: EffortLevel | null;   // preserved for averaging in half 2
+  quarterEfforts: (EffortLevel | null)[];  // [q1, q2, q3, q4] effort per quarter
   activities: ActivityId[];
 }
 
@@ -65,7 +65,7 @@ export interface FeedbackSummary {
 
 export interface GameState {
   player: PlayerState;
-  currentHalf: 1 | 2;
+  currentQuarter: number;  // 1-4 within each semester
   temporaryAllocations: TemporaryAllocations;
   pendingEvent: GameEvent | null;
   pendingEventResolved: boolean;
